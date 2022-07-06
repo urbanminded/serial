@@ -40,6 +40,10 @@ type structTimeouts struct {
 	WriteTotalTimeoutConstant   uint32
 }
 
+func isStandardBaudRate(baud int) bool {
+	return true
+}
+
 func openPort(name string, baud int, databits byte, parity Parity, stopbits StopBits, readTimeout time.Duration) (p *Port, err error) {
 	if len(name) > 0 && name[0] != '\\' {
 		name = "\\\\.\\" + name

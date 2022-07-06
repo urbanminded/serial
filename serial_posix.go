@@ -18,47 +18,35 @@ import (
 	//"unsafe"
 )
 
+var bauds = map[int]C.speed_t{
+	50:     C.B50,
+	75:     C.B75,
+	110:    C.B110,
+	134:    C.B134,
+	150:    C.B150,
+	200:    C.B200,
+	300:    C.B300,
+	600:    C.B600,
+	1200:   C.B1200,
+	2400:   C.B2400,
+	4800:   C.B4800,
+	9600:   C.B9600,
+	19200:  C.B19200,
+	38400:  C.B38400,
+	57600:  C.B57600,
+	115200: C.B115200,
+}
+
 func isStandardBaudRate(baud int) bool {
-	return getStandardBaudRate(baud) != 0
+	_, ok := bauds[baud]
+	return ok
 }
 
 func getStandardBaudRate(baud int) C.speed_t {
-	switch baud {
-	case 115200:
-		return C.B115200
-	case 57600:
-		return C.B57600
-	case 38400:
-		return C.B38400
-	case 19200:
-		return C.B19200
-	case 9600:
-		return C.B9600
-	case 4800:
-		return C.B4800
-	case 2400:
-		return C.B2400
-	case 1200:
-		return C.B1200
-	case 600:
-		return C.B600
-	case 300:
-		return C.B300
-	case 200:
-		return C.B200
-	case 150:
-		return C.B150
-	case 134:
-		return C.B134
-	case 110:
-		return C.B110
-	case 75:
-		return C.B75
-	case 50:
-		return C.B50
-	default:
-		return 0
+	if rate, ok := bauds[baud]; ok {
+		return rate
 	}
+	return 0
 }
 
 func openPort(name string, baud int, databits byte, parity Parity, stopbits StopBits, readTimeout time.Duration) (p *Port, err error) {

@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package serial
@@ -10,6 +11,8 @@ import (
 	"time"
 	"unsafe"
 )
+
+const errTimeout = syscall.Errno(1460)
 
 type Port struct {
 	f  *os.File
@@ -315,11 +318,14 @@ func newOverlapped() (*syscall.Overlapped, error) {
 
 func getOverlappedResult(h syscall.Handle, overlapped *syscall.Overlapped) (int, error) {
 	var n int
-	r, _, err := syscall.Syscall6(nGetOverlappedResult, 4,
+	_, _, err := syscall.Syscall6(nGetOverlappedResult, 4,
 		uintptr(h),
 		uintptr(unsafe.Pointer(overlapped)),
 		uintptr(unsafe.Pointer(&n)), 1, 0, 0)
-	if r == 0 {
+
+	if err == errTimeout {
+		return 0, io.EOF
+	} else if err != 0 {
 		return n, err
 	}
 

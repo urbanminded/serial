@@ -109,7 +109,7 @@ type Config struct {
 	StopBits StopBits
 
 	// DisableNonStandardBaudRates disables use of non-standard baud rates.
-	// Using non-standard baud rates may result in undefined behaviour.
+	// Specifying a non-standard baud rates may result in undefined behaviour.
 	DisableNonStandardBaudRates bool
 
 	// RTSFlowControl bool

@@ -108,6 +108,10 @@ type Config struct {
 	// Number of stop bits to use. Default is 1 (1 stop bit).
 	StopBits StopBits
 
+	// DisableNonStandardBaudRates disables use of non-standard baud rates.
+	// Using non-standard baud rates may result in undefined behaviour.
+	DisableNonStandardBaudRates bool
+
 	// RTSFlowControl bool
 	// DTRFlowControl bool
 	// XONFlowControl bool
@@ -124,6 +128,9 @@ var ErrBadStopBits error = errors.New("unsupported stop bit setting")
 // ErrBadParity is returned if the parity is not supported.
 var ErrBadParity error = errors.New("unsupported parity setting")
 
+// ErrBadBaudRate is returned if the baud rate is not supported.
+var ErrBadBaudRate error = errors.New("unsupported baud rate")
+
 // OpenPort opens a serial port with the specified configuration
 func OpenPort(c *Config) (*Port, error) {
 	size, par, stop := c.Size, c.Parity, c.StopBits
@@ -135,6 +142,9 @@ func OpenPort(c *Config) (*Port, error) {
 	}
 	if stop == 0 {
 		stop = Stop1
+	}
+	if c.DisableNonStandardBaudRates && !isStandardBaudRate(c.Baud) {
+		return nil, ErrBadBaudRate
 	}
 	return openPort(c.Name, c.Baud, size, par, stop, c.ReadTimeout)
 }

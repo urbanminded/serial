@@ -1,3 +1,4 @@
+//go:build !windows && !linux && cgo
 // +build !windows,!linux,cgo
 
 package serial
@@ -17,6 +18,49 @@ import (
 	//"unsafe"
 )
 
+func isStandardBaudRate(baud int) bool {
+	return getStandardBaudRate(baud) != 0
+}
+
+func getStandardBaudRate(baud int) C.speed_t {
+	switch baud {
+	case 115200:
+		return C.B115200
+	case 57600:
+		return C.B57600
+	case 38400:
+		return C.B38400
+	case 19200:
+		return C.B19200
+	case 9600:
+		return C.B9600
+	case 4800:
+		return C.B4800
+	case 2400:
+		return C.B2400
+	case 1200:
+		return C.B1200
+	case 600:
+		return C.B600
+	case 300:
+		return C.B300
+	case 200:
+		return C.B200
+	case 150:
+		return C.B150
+	case 134:
+		return C.B134
+	case 110:
+		return C.B110
+	case 75:
+		return C.B75
+	case 50:
+		return C.B50
+	default:
+		return 0
+	}
+}
+
 func openPort(name string, baud int, databits byte, parity Parity, stopbits StopBits, readTimeout time.Duration) (p *Port, err error) {
 	f, err := os.OpenFile(name, syscall.O_RDWR|syscall.O_NOCTTY|syscall.O_NONBLOCK, 0666)
 	if err != nil {
@@ -35,43 +79,12 @@ func openPort(name string, baud int, databits byte, parity Parity, stopbits Stop
 		f.Close()
 		return nil, err
 	}
-	var speed C.speed_t
-	switch baud {
-	case 115200:
-		speed = C.B115200
-	case 57600:
-		speed = C.B57600
-	case 38400:
-		speed = C.B38400
-	case 19200:
-		speed = C.B19200
-	case 9600:
-		speed = C.B9600
-	case 4800:
-		speed = C.B4800
-	case 2400:
-		speed = C.B2400
-	case 1200:
-		speed = C.B1200
-	case 600:
-		speed = C.B600
-	case 300:
-		speed = C.B300
-	case 200:
-		speed = C.B200
-	case 150:
-		speed = C.B150
-	case 134:
-		speed = C.B134
-	case 110:
-		speed = C.B110
-	case 75:
-		speed = C.B75
-	case 50:
-		speed = C.B50
-	default:
-		f.Close()
-		return nil, fmt.Errorf("Unknown baud rate %v", baud)
+
+	// This may seem a bit strange but the POSIX API doesn't explicitly state that
+	// baud rate constants are literal baud rate values.
+	speed := getStandardBaudRate(baud)
+	if speed == 0 {
+		speed = C.speed_t(baud)
 	}
 
 	_, err = C.cfsetispeed(&st, speed)

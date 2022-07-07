@@ -15,6 +15,8 @@ import (
 	"os"
 	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 	//"unsafe"
 )
 
@@ -195,4 +197,18 @@ func (p *Port) Flush() error {
 
 func (p *Port) Close() (err error) {
 	return p.f.Close()
+}
+
+func (p *Port) AssertRTS(enabled bool) error {
+	fd := int(p.f.Fd())
+	status, err := unix.IoctlGetInt(fd, unix.TIOCMGET)
+	if err != nil {
+		return err
+	}
+	if enabled {
+		status |= unix.TIOCM_RTS
+	} else {
+		status &^= unix.TIOCM_RTS
+	}
+	return unix.IoctlSetInt(fd, unix.TIOCMSET, status)
 }

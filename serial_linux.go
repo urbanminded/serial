@@ -174,3 +174,7 @@ func (p *Port) Flush() error {
 func (p *Port) Close() (err error) {
 	return p.f.Close()
 }
+
+func (p *Port) AssertRTS(enabled bool) error {
+	return fmt.Errorf("not implemented")
+}

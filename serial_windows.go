@@ -5,6 +5,7 @@ package serial
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"syscall"
@@ -140,6 +141,18 @@ func (p *Port) Flush() error {
 	return purgeComm(p.fd)
 }
 
+func (p *Port) AssertRTS(asserted bool) error {
+	status := 4 // CLRRTS
+	if asserted {
+		status = 3 // SETRTS
+	}
+	r, _, err := syscall.Syscall(nEscapeCommFunction, 2, uintptr(p.fd), uintptr(status), 0)
+	if r == 0 {
+		return err
+	}
+	return nil
+}
+
 var (
 	nSetCommState,
 	nSetCommTimeouts,
@@ -149,7 +162,8 @@ var (
 	nCreateEvent,
 	nResetEvent,
 	nPurgeComm,
-	nFlushFileBuffers uintptr
+	nFlushFileBuffers,
+	nEscapeCommFunction uintptr
 )
 
 func init() {
@@ -168,6 +182,7 @@ func init() {
 	nResetEvent = getProcAddr(k32, "ResetEvent")
 	nPurgeComm = getProcAddr(k32, "PurgeComm")
 	nFlushFileBuffers = getProcAddr(k32, "FlushFileBuffers")
+	nEscapeCommFunction = getProcAddr(k32, "EscapeCommFunction")
 }
 
 func getProcAddr(lib syscall.Handle, name string) uintptr {
